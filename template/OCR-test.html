@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แปลงอักษรล้านนา</title>
+    <style>
+        body {
+            background-color: #f3e5ab; 
+            font-family: 'Tahoma', sans-serif; 
+            color: #5c3a19;
+            text-align: center; 
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #8d5524; 
+            font-family: 'DokChok', serif;
+        }
+        #previewImage {
+            height: 60px;
+            width: auto;
+            margin: 10px;
+            border: 3px solid #8d5524; 
+            border-radius: 5px;
+        }
+        @font-face {
+            font-family: 'LannaFont';
+            src: url('LN.ttf') format('truetype'); 
+        }
+        .lanna-text {
+            font-family: 'LannaFont', sans-serif;
+            font-size: 45px;
+            color: #5c3a19;
+            margin-top: 20px;
+        }
+        .result-text {
+            font-family: 'DokChok', serif;
+            font-size: 36spx;
+            color: #5c3a19;
+            margin-top: 20px;
+        }
+        #fileInput, #uploadButton {
+            font-size: 18px;
+            padding: 10px 20px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #8d5524;
+            color: #fff;
+            cursor: pointer;
+        }
+        #uploadButton:hover {
+            background-color: #aa7e40; /* เปลี่ยนสีเมื่อ hover */
+        }
+    </style>
+</head>
+<body>
+    <h1>แปลงอักษรล้านนา</h1>
+    
+    <img id="previewImage" src="" alt="เลือกไฟล์เพื่อแสดงภาพที่นี่">
+    <br>
+    <input type="file" id="fileInput">
+    <br>
+    <button id="uploadButton">อัปโหลดภาพ</button>
+    <br>
+    <div id="result_LN" class="lanna-text"></div>
+    <div id="result" class = "result-text"></div>
+    
+    <script>
+        let selectedFile;
+        const resultDiv = document.getElementById('result_LN');
+        const result = document.getElementById('result');
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            selectedFile = event.target.files[0];
+            if (selectedFile) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('previewImage').src = e.target.result;
+                }
+                reader.readAsDataURL(selectedFile);
+            }
+        });
+
+        document.getElementById('uploadButton').addEventListener('click', function() {
+            if (selectedFile) {
+                const formData = new FormData();
+                formData.append('image', selectedFile);
+
+                fetch('http://127.0.0.1:5000/process_image', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    resultDiv.innerText = data.text_LN;
+                    result.innerText = data.text;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('เกิดข้อผิดพลาดในการอัปโหลด');
+                });
+            } else {
+                alert('กรุณาเลือกภาพก่อนอัปโหลด');
+            }
+        });
+    </script>
+</body>
+</html>
