@@ -80,8 +80,21 @@ def process_image():
 
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-    thresh = cv2.threshold(gray, 145, 255, cv2.THRESH_BINARY)[1] 
-    thresh = cv2.bitwise_not(thresh)
+    white_pixels = np.sum(gray == 255)
+    black_pixels = np.sum(gray == 0)
+
+    if white_pixels > black_pixels:
+        print("Not binary")
+        thresh = cv2.threshold(gray, 145, 255, cv2.THRESH_BINARY)[1] 
+        thresh = cv2.bitwise_not(thresh)
+    else :
+        print("binary")
+        thresh = cv2.threshold(gray, 255, 255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1] 
+        kernel = np.ones((2, 2), np.uint8)
+        dilated_image = cv2.dilate(thresh, kernel, iterations=2)
+
+        thresh = cv2.erode(dilated_image, kernel, iterations=2)
+
 
     contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
@@ -131,8 +144,8 @@ def process_image():
         predicts.append([encode[pred_cls],object_center,x,x+w])
         count += 1
 
-    under_line = int(sum(obj_b)/len(obj_b))+4
-    line = int(sum(obj_Y)/len(obj_Y))-3
+    under_line = int(sum(obj_b)/len(obj_b))+6
+    line = int(sum(obj_Y)/len(obj_Y))-9
     cv2.line(image, (0,line), (5000,line), (0, 0, 255), 1)
     cv2.line(image, (0,under_line), (5000,under_line), (0, 0, 255), 1)
 
@@ -146,6 +159,8 @@ def process_image():
             continue
 
         if predicts[i][1][1] > under_line :
+            if predicts[i][0] in ['เ','า','ใ','ิ','ี','ะ','ร']:
+                predicts[i][0] = 'ุ'
             under_vowel.append(predicts[i])
             continue
         
@@ -195,6 +210,8 @@ def process_image():
                 text_edit += 'น'
 
     if "ฯ" in text_edit:text_edit = text_edit.replace("ฯ","")
+    print(text)
+    print(text_edit)
 
     return jsonify({'text_LN': text, 'text': text_edit})
 

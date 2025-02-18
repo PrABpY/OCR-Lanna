@@ -59,7 +59,7 @@ labels = dict((v,k) for k,v in labels.items())
 
 model = load_model('Model/OCR-lanna.h5')
 
-image = cv2.imread("image_for_test/026.png")
+image = cv2.imread("image_for_test/18.jpg")
 new_height = 150 
 h, w = image.shape[:2]
 new_width = int((new_height / h) * w)
@@ -68,8 +68,20 @@ image = cv2.resize(image, (new_width, new_height), interpolation=cv2.INTER_LINEA
 
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-thresh = cv2.threshold(gray, 145, 255, cv2.THRESH_BINARY)[1] 
-thresh = cv2.bitwise_not(thresh)
+thresh = cv2.threshold(gray, 255, 255, 
+                             cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1] 
+
+kernel = np.ones((2, 2), np.uint8)
+dilated_image = cv2.dilate(thresh, kernel, iterations=2)
+
+thresh = cv2.erode(dilated_image, kernel, iterations=2)
+
+# thresh = cv2.bitwise_not(gray)
+
+# cv2.imshow('Detected gray', thresh)
+# cv2.waitKey(0)
+# cv2.destroyAllWindows()
+
 
 contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
@@ -120,8 +132,8 @@ for i, contour in enumerate(filtered_contours):
     predicts.append([encode[pred_cls],object_center,x,x+w])
     count += 1
 
-under_line = int(sum(obj_b)/len(obj_b))+4
-line = int(sum(obj_Y)/len(obj_Y))-3
+under_line = int(sum(obj_b)/len(obj_b))+6
+line = int(sum(obj_Y)/len(obj_Y))-9
 cv2.line(image, (0,line), (5000,line), (0, 0, 255), 1)
 cv2.line(image, (0,under_line), (5000,under_line), (0, 0, 255), 1)
 
@@ -135,6 +147,8 @@ for i in range(len(predicts)):
         continue
 
     if predicts[i][1][1] > under_line :
+        if predicts[i][0] in ['เ','า','ใ','ิ','ี','ะ','ร']:
+            predicts[i][0] = 'ุ'
         under_vowel.append(predicts[i])
         continue
     
