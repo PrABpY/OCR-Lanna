@@ -83,17 +83,18 @@ def process_image():
     white_pixels = np.sum(gray == 255)
     black_pixels = np.sum(gray == 0)
 
-    if white_pixels > black_pixels:
-        print("Not binary")
-        thresh = cv2.threshold(gray, 145, 255, cv2.THRESH_BINARY)[1] 
-        thresh = cv2.bitwise_not(thresh)
-    else :
+    if white_pixels < black_pixels:
         print("binary")
         thresh = cv2.threshold(gray, 255, 255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1] 
         kernel = np.ones((2, 2), np.uint8)
         dilated_image = cv2.dilate(thresh, kernel, iterations=2)
 
         thresh = cv2.erode(dilated_image, kernel, iterations=2)
+
+    else :
+        print("Not binary")
+        thresh = cv2.threshold(gray, 145, 255, cv2.THRESH_BINARY)[1] 
+        thresh = cv2.bitwise_not(thresh)
 
 
     contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
