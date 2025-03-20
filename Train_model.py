@@ -49,12 +49,13 @@ encode = {'_n':'-น',
           'EU':'ุ',
           'EA':'เ',
           'AI':'ใ',
+          '_O':'โ'
           }
 
 train_dir = "dataset\\model\\train\\"
 val_dir = 'dataset\\model\\test\\'
 target_img_shape = (70,70)
-nclass = 35
+nclass = 36
 
 
 train_datagen = ImageDataGenerator()

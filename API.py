@@ -135,6 +135,24 @@ def process_image():
         pred_cls = labels[np.argmax(predict, axis=-1)[0]]
         print("prediction: ", encode[pred_cls])
 
+        # ========================== UPDATE ==================================
+        similaly = []
+        path_check = os.path.join(train_dir,pred_cls)
+        print(path_check)
+        for file_image in os.listdir(path_check) :
+            # print(file_image)
+            path_image = os.path.join(path_check,file_image)
+            template = cv2.imread(path_image)
+            template = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
+            template = cv2.resize(template,(70,70))
+            results = cv2.matchTemplate(template, cv2.cvtColor(result, cv2.COLOR_BGR2GRAY), cv2.TM_CCOEFF_NORMED)
+            _, max_val, _, max_loc = cv2.minMaxLoc(results)
+            # print(max_val)
+            similaly.append(max_val)
+        avg_similaly = max(similaly)
+        # print(avg_similaly)
+        # ====================================================================
+
         object_center = [x+(w//2), y+(h//2)]
         # cv2.imshow(f'Character {count}', result)
         cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
@@ -142,7 +160,7 @@ def process_image():
         cv2.circle(image, (object_center[0],object_center[1]), 2, (0,0,255), -1)
         obj_Y.append(y)
         obj_b.append(y+h)
-        predicts.append([encode[pred_cls],object_center,x,x+w])
+        predicts.append([encode[pred_cls],object_center,x,x+w,avg_similaly])
         count += 1
 
     under_line = int(sum(obj_b)/len(obj_b))+6
@@ -171,6 +189,8 @@ def process_image():
     alphabet.sort(key = lambda x : x[1][0])
     top_vowel.sort(key = lambda x : x[1][0])
     under_vowel.sort(key = lambda x : x[1][0])
+    sort_similaly = []
+    alp = []
     text = ""
     # print(top_vowel)
     # print(alphabet)
@@ -179,21 +199,28 @@ def process_image():
     for i in range(len(alphabet)):
         if alphabet[i][0] in ['ิ','ี'] :
             text += 'ค'
+            alp.append('ค')
         else :
             text += alphabet[i][0]
+            sort_similaly.append(alphabet[i])
+            alp.append(alphabet[i][0])
 
         for j in range(len(top_vowel)):
             if alphabet[i][2] < top_vowel[j][2] < alphabet[i][3] or alphabet[i][2] < top_vowel[j][1][0] < alphabet[i][3] :
                 if top_vowel[j][0] in ['ค','ง','เ','ก','ม','ป','ย','พ','ว'] :
                     text += 'ิ'
+                    alp.append('ิ')
                 else :
                     text += top_vowel[j][0]
+                    alp.append(top_vowel[j][0])
+                sort_similaly.append(top_vowel[j])
                 top_vowel[j][0] = ""
 
         for j in range(len(under_vowel)):
             if alphabet[i][2] < under_vowel[j][2]+5 < alphabet[i][3] or alphabet[i][2] < under_vowel[j][1][0] < alphabet[i][3] :
-                print(under_vowel[j][0])
                 text += under_vowel[j][0]+"ฯ"
+                alp.append(under_vowel[j][0]+"ฯ")
+                sort_similaly.append(under_vowel[j])
                 under_vowel[j][0] = ""
 
     if "-" in text:text = text.replace("-","")
@@ -213,8 +240,11 @@ def process_image():
     if "ฯ" in text_edit:text_edit = text_edit.replace("ฯ","")
     print(text)
     print(text_edit)
+    similarities = [pred[4]*100 for pred in sort_similaly]
+    print(alp)
+    print(similarities)
 
-    return jsonify({'text_LN': text, 'text': text_edit})
+    return jsonify({'text_LN': text, 'text': text_edit, 'similarities': similarities, 'alp': alp})
 
 if __name__ == '__main__':
     app.run()

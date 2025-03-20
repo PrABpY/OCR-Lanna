@@ -2,7 +2,6 @@ import cv2
 import numpy as np
 import os
 
-# อ่านภาพ
 path = 'dataset/text binary'
 for file in os.listdir(path):
     if file.endswith(('.jpg', '.jpeg', '.png', '.JPG', 'HEIC', '.PNG')):
@@ -10,35 +9,21 @@ for file in os.listdir(path):
         print(file_path)
         image = cv2.imread(file_path)
 
-        # แปลงเป็นภาพขาวดำ (Grayscale)
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-
-        # ใช้ Adaptive Threshold เพื่อแยกตัวอักษร
         thresh = cv2.threshold(gray, 255, 255, 
                              cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1] 
 
-        # ใช้ Morphological Operations เพื่อลดการเชื่อมต่อของตัวอักษร
-        # kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (1, 1))
-        # morphed = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
-
-        # thresh = cv2.bitwise_not(thresh)
-
-        # kernel = np.ones((2, 2), np.uint8) 
-        # thresh = cv2.erode(thresh, kernel, iterations=1) 
-
-        # ค้นหา Contours
         contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         print(len(contours))
 
-        # คัดกรองเฉพาะ contour ที่มีขนาดใหญ่พอและเล็กเกินไป
         MIN_AREA = 100  # พื้นที่ขั้นต่ำ
         MAX_AREA = 8000  # พื้นที่สูงสุด
         filtered_contours = [cnt for cnt in contours if MIN_AREA < cv2.contourArea(cnt) < MAX_AREA]
 
         name = file_path.split("/")[2]
         count = 0
-        # วนลูปตีกรอบแต่ละตัวอักษร
+        
         for i, contour in enumerate(filtered_contours):
             x, y, w, h = cv2.boundingRect(contour)
             object_img = thresh[y:y + h, x:x + w]

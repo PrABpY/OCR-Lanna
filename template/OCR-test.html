@@ -36,7 +36,7 @@
         }
         .result-text {
             font-family: 'DokChok', serif;
-            font-size: 36spx;
+            font-size: 36px;
             color: #5c3a19;
             margin-top: 20px;
         }
@@ -51,7 +51,19 @@
             cursor: pointer;
         }
         #uploadButton:hover {
-            background-color: #aa7e40; /* เปลี่ยนสีเมื่อ hover */
+            background-color: #aa7e40;
+        }
+        table {
+            margin: 20px auto;
+            border-collapse: collapse;
+            width: 80%;
+        }
+        table, th, td {
+            border: 1px solid #8d5524;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
         }
     </style>
 </head>
@@ -65,12 +77,14 @@
     <button id="uploadButton">อัปโหลดภาพ</button>
     <br>
     <div id="result_LN" class="lanna-text"></div>
-    <div id="result" class = "result-text"></div>
+    <div id="result" class="result-text"></div>
+    <div id="char_similarity"></div>
     
     <script>
         let selectedFile;
         const resultDiv = document.getElementById('result_LN');
         const result = document.getElementById('result');
+        
         document.getElementById('fileInput').addEventListener('change', function(event) {
             selectedFile = event.target.files[0];
             if (selectedFile) {
@@ -95,6 +109,17 @@
                 .then(data => {
                     resultDiv.innerText = data.text_LN;
                     result.innerText = data.text;
+
+                    let similarityHTML = "<h3>เปอร์เซ็นต์ตรงกันของแต่ละตัวอักษร</h3><table><tr><th>อักษรล้านนา</th><th>เปอร์เซ็นต์ความคล้ายคลึง</th></tr>";
+                    for (let i = 0; i < Math.max(data.alp.length); i++) {
+                        let lannaChar = data.alp[i] || ' ';
+                        // let thaiChar = data.text[i] || ' ';
+                        let similarity = data.similarities[i] ? data.similarities[i].toFixed(2) : '0.00';
+
+                        similarityHTML += `<tr><td class="lanna-text">${lannaChar}</td><td>${similarity}%</td></tr>`;
+                    }
+                    similarityHTML += "</table>";
+                    document.getElementById('char_similarity').innerHTML = similarityHTML;
                 })
                 .catch(error => {
                     console.error('Error:', error);
